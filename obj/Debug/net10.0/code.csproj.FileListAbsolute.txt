@@ -103,7 +103,6 @@ D:\BYU\cse212-hw\cse212-ww-student-template\week03\code\obj\Debug\net10.0\code.G
 D:\BYU\cse212-hw\cse212-ww-student-template\week03\code\obj\Debug\net10.0\code.AssemblyInfoInputs.cache
 D:\BYU\cse212-hw\cse212-ww-student-template\week03\code\obj\Debug\net10.0\code.AssemblyInfo.cs
 D:\BYU\cse212-hw\cse212-ww-student-template\week03\code\obj\Debug\net10.0\code.csproj.CoreCompileInputs.cache
-D:\BYU\cse212-hw\cse212-ww-student-template\week03\code\obj\Debug\net10.0\code.sourcelink.json
 D:\BYU\cse212-hw\cse212-ww-student-template\week03\code\obj\Debug\net10.0\code.csproj.Up2Date
 D:\BYU\cse212-hw\cse212-ww-student-template\week03\code\obj\Debug\net10.0\code.dll
 D:\BYU\cse212-hw\cse212-ww-student-template\week03\code\obj\Debug\net10.0\refint\code.dll
