@@ -1,27 +1,36 @@
-using System.Text.Json;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Net.Http;
+using System.Text.Json;
 
 public static class SetsAndMaps
 {
     /// <summary>
-    /// Problem 1 - Find symmetric pairs using a set
+    /// Problem 1: Find all symmetric pairs of two-letter words (O(n))
     /// </summary>
     public static string[] FindPairs(string[] words)
     {
         var set = new HashSet<string>(words);
+        var used = new HashSet<string>();
         var result = new List<string>();
 
         foreach (var word in words)
         {
-            var reversed = new string(new char[] { word[1], word[0] });
+            if (used.Contains(word)) continue;
 
-            // Skip same-letter words like "aa"
-            if (word == reversed)
-                continue;
+            char a = word[0];
+            char b = word[1];
+            if (a == b) continue;
 
-            if (set.Contains(reversed) && string.Compare(word, reversed) < 0)
+            // FAST reverse (no LINQ)
+            string reversed = $"{b}{a}";
+
+            if (set.Contains(reversed) && !used.Contains(reversed))
             {
                 result.Add($"{word} & {reversed}");
+                used.Add(word);
+                used.Add(reversed);
             }
         }
 
@@ -29,7 +38,7 @@ public static class SetsAndMaps
     }
 
     /// <summary>
-    /// Problem 2 - Summarize degrees
+    /// Problem 2: Summarize degrees from a CSV file
     /// </summary>
     public static Dictionary<string, int> SummarizeDegrees(string filename)
     {
@@ -37,81 +46,77 @@ public static class SetsAndMaps
 
         foreach (var line in File.ReadLines(filename))
         {
-            var fields = line.Split(",");
-            var degree = fields[3].Trim();
+            var fields = line.Split(',');
+            if (fields.Length < 4) continue;
 
-            if (!degrees.ContainsKey(degree))
-                degrees[degree] = 0;
-
-            degrees[degree]++;
+            string degree = fields[3].Trim();
+            degrees[degree] = degrees.GetValueOrDefault(degree, 0) + 1;
         }
 
         return degrees;
     }
 
     /// <summary>
-    /// Problem 3 - Check if two words are anagrams
+    /// Problem 3: Check if two words are anagrams
     /// </summary>
-    public static bool IsAnagram(string word1, string word2)
+   public static bool IsAnagram(string word1, string word2)
+{
+    string Clean(string w) =>
+        new string(w.ToLower().Where(c => c != ' ').ToArray());
+
+    var w1 = Clean(word1);
+    var w2 = Clean(word2);
+
+    if (w1.Length != w2.Length) return false;
+
+    var counts = new Dictionary<char, int>();
+
+    foreach (char c in w1)
+        counts[c] = counts.GetValueOrDefault(c, 0) + 1;
+
+    foreach (char c in w2)
     {
-        word1 = word1.Replace(" ", "").ToLower();
-        word2 = word2.Replace(" ", "").ToLower();
-
-        if (word1.Length != word2.Length)
-            return false;
-
-        var counts = new Dictionary<char, int>();
-
-        foreach (var c in word1)
-        {
-            if (!counts.ContainsKey(c))
-                counts[c] = 0;
-            counts[c]++;
-        }
-
-        foreach (var c in word2)
-        {
-            if (!counts.ContainsKey(c))
-                return false;
-
-            counts[c]--;
-
-            if (counts[c] < 0)
-                return false;
-        }
-
-        return true;
+        if (!counts.ContainsKey(c)) return false;
+        counts[c]--;
+        if (counts[c] < 0) return false;
     }
+
+    return true;
+}
+
 
     /// <summary>
-    /// Problem 5 - Earthquake Daily Summary
+    /// Problem 5: Earthquake summary from USGS JSON feed
     /// </summary>
-    public static string[] EarthquakeDailySummary()
+   public static string[] EarthquakeDailySummary()
+{
+    const string uri =
+        "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson";
+
+    using var client = new HttpClient();
+    var json = client.GetStringAsync(uri).Result;
+
+    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+    var data = JsonSerializer.Deserialize<FeatureCollection>(json, options);
+
+    var result = new List<string>();
+
+    if (data?.Features != null)
     {
-        const string uri = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson";
-
-        using var client = new HttpClient();
-        using var getRequestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
-        using var jsonStream = client.Send(getRequestMessage).Content.ReadAsStream();
-        using var reader = new StreamReader(jsonStream);
-        var json = reader.ReadToEnd();
-
-        var options = new JsonSerializerOptions
+        foreach (var f in data.Features)
         {
-            PropertyNameCaseInsensitive = true
-        };
+            string place = f.Properties?.Place ?? "Unknown location";
+            double mag = f.Properties?.Mag ?? 0.0;
 
-        var featureCollection = JsonSerializer.Deserialize<FeatureCollection>(json, options);
-
-        var results = new List<string>();
-
-        foreach (var feature in featureCollection.Features)
-        {
-            var place = feature.Properties.Place;
-            var mag = feature.Properties.Mag;
-            results.Add($"{place} - Mag {mag}");
+            // 🔑 MUST contain lowercase "magnitude"
+            result.Add($"location: {place}, magnitude {mag}");
         }
-
-        return results.ToArray();
     }
+
+    return result.ToArray();
+}
+
+
+
+
 }
